@@ -31,13 +31,19 @@ export class BlockService {
     }
 
     async createAndSaveGenesisBlock(): Promise<Block> {
-        const genesisBlock = new Block(0, new Date().toISOString(), [], '0', '');
+        const genesisBlock = new Block(
+            0,
+            new Date().toISOString(),
+            [], // Transacciones vacías
+            [], // Procesos críticos vacíos
+            '0',
+            ''
+        );
         genesisBlock.hash = genesisBlock.calculateHash();
         genesisBlock.validator = 'system';
 
         // Guardar bloque génesis
         await this.saveBlock(genesisBlock);
-
         return genesisBlock;
     }
 
@@ -59,24 +65,37 @@ export class BlockService {
             await this.redis.set(`${this.HEIGHT_KEY}:${block.index}`, block.hash);
             await this.redis.set(this.HEIGHT_KEY, block.index.toString());
 
-            // 4. Indexar transacciones
-            for (const tx of block.transactions) {
-                await this.redis.hSet(
-                    this.TX_INDEX_KEY,
-                    tx.processId,
-                    block.hash
-                );
+            // 4. Indexar transacciones (si existen)
+            if (block.transactions) {
+                for (const tx of block.transactions) {
+                    await this.redis.hSet(
+                        this.TX_INDEX_KEY,
+                        tx.processId,
+                        block.hash
+                    );
+                }
+
+                // 5. Remover transacciones del mempool
+                block.transactions.forEach(tx => {
+                    this.mempool.delete(tx.processId);
+                });
             }
 
-            // 5. Actualizar altura de la blockchain
+            // 6. Indexar procesos críticos (si existen)
+            if (block.criticalProcesses) {
+                for (const process of block.criticalProcesses) {
+                    await this.redis.hSet(
+                        this.TX_INDEX_KEY,
+                        process.processId,
+                        block.hash
+                    );
+                }
+            }
+
+            // 7. Actualizar altura de la blockchain
             this.blockHeight = Math.max(this.blockHeight, block.index);
 
-            // 6. Remover transacciones del mempool
-            block.transactions.forEach(tx => {
-                this.mempool.delete(tx.processId);
-            });
-
-            // 7. Crear snapshot periódico (cada 1000 bloques)
+            // 8. Crear snapshot periódico (cada 1000 bloques)
             if (block.index % 1000 === 0) {
                 await this.createSnapshot(block.index);
             }
@@ -151,7 +170,8 @@ export class BlockService {
             const blockInstance = new Block(
                 block.index,
                 block.timestamp,
-                block.transactions,
+                block.transactions || [], // Usar un array vacío si transactions es undefined
+                block.criticalProcesses || [], // Usar un array vacío si criticalProcesses es undefined
                 block.previousHash,
                 block.signature
             );
@@ -160,7 +180,6 @@ export class BlockService {
             blockInstance.validator = block.validator;
 
             return blockInstance;
-
         } catch (error) {
             this.logger.error('Error getting block:', error);
             throw error;

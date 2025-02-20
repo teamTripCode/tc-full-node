@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from 'src/redis/redis.service';
 import { BlockService } from 'src/block/block.service';
 import { Block } from 'src/block/block';
+import { BlockType } from 'src/block/dto/block.dto';
 
 @Injectable()
 export class BlockchainService {
@@ -10,7 +11,7 @@ export class BlockchainService {
 
     constructor(
         private readonly redis: RedisService,
-        private readonly blockService: BlockService // Inyecta BlockService
+        private readonly blockService: BlockService
     ) { }
 
     /**
@@ -22,7 +23,13 @@ export class BlockchainService {
         if (!exists) {
             // Usa BlockService para validar y guardar el bloque
             await this.blockService.saveBlock(block);
-            this.logger.log(`Block ${block.hash} added to storage`);
+
+            // Log dependiendo del tipo de bloque
+            if (block.type === BlockType.TRANSACTION) {
+                this.logger.log(`Transaction block ${block.hash} added to storage`);
+            } else if (block.type === BlockType.CRITICAL_PROCESS) {
+                this.logger.log(`Critical process block ${block.hash} added to storage`);
+            }
         }
     }
 
@@ -52,8 +59,21 @@ export class BlockchainService {
     async getLatestBlocks(limit = 10): Promise<Block[]> {
         const allBlocks = await this.redis.hGetAll(this.BLOCKCHAIN_KEY);
         return Object.values(allBlocks)
-            .map((block) => JSON.parse(block) as Block) // Asegura que cada bloque sea del tipo Block
+            .map((block) => JSON.parse(block) as Block)
             .sort((a, b) => b.index - a.index) // Ordena por índice (altura)
             .slice(0, limit);
+    }
+
+    /**
+     * Obtiene todos los bloques de un tipo específico.
+     * @param type - El tipo de bloque (TRANSACTION o CRITICAL_PROCESS).
+     * @returns Una lista de bloques del tipo especificado.
+     */
+    async getBlocksByType(type: BlockType): Promise<Block[]> {
+        const allBlocks = await this.redis.hGetAll(this.BLOCKCHAIN_KEY);
+        return Object.values(allBlocks)
+            .map((block) => JSON.parse(block) as Block)
+            .filter((block) => block.type === type)
+            .sort((a, b) => b.index - a.index); // Ordena por índice (altura)
     }
 }

@@ -1,7 +1,14 @@
+export enum BlockType {
+    TRANSACTION = 'TRANSACTION',
+    CRITICAL_PROCESS = 'CRITICAL_PROCESS'
+}
+
 export interface IBlock {
     index: number;
     timestamp: string;
-    transactions: ITransaction[];
+    type: BlockType;
+    transactions?: ITransaction[];
+    criticalProcesses?: ICriticalProcess[];
     previousHash: string;
     hash: string;
     nonce: number;
@@ -12,7 +19,7 @@ export interface IBlock {
     forgeBlock(validator: string): void;
 }
 
-export interface BlockData {
+export interface BlockDataTransaction {
     from: string;
     to: string;
     amount: number;
@@ -23,7 +30,20 @@ export interface BlockData {
 export interface ITransaction {
     processId: string;
     description: string;
-    data: string;
+    data: BlockDataTransaction;
     timestamp: string;
     signature: string;
+}
+
+export interface ICriticalProcess {
+    processId: string;
+    hashData: string; // Datos sensibles hasheados
+    originalDataStructure: NestedObject;
+    description: string;
+    timestamp: string;
+    signature: string;
+}
+
+export interface NestedObject {
+    [key: string]: string | number | boolean | null | NestedObject | NestedObject[];
 }
