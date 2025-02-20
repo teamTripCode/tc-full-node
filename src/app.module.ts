@@ -9,10 +9,11 @@ import { SyncService } from './sync/sync.service';
 import { BlockchainService } from './blockchain/blockchain.service';
 import { ConfigModule } from '@nestjs/config';
 import { P2pModule } from './p2p/p2p.module';
+import { BlockService } from './block/block.service';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), P2pModule],
   controllers: [AppController],
-  providers: [AppService, RedisService, P2pGateway, RelayService, HealthService, SyncService, BlockchainService],
+  providers: [AppService, RedisService, P2pGateway, RelayService, HealthService, SyncService, BlockchainService, BlockService],
 })
 export class AppModule {}
