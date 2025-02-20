@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Socket, io } from 'socket.io-client'
+import { P2pGateway } from "./p2p.gateway";
 
 @Injectable()
 export class P2PService {
@@ -8,7 +9,7 @@ export class P2PService {
     private seedNodes: string[];
     private connected = false;
 
-    constructor() {
+    constructor(private readonly p2p: P2pGateway) {
         this.seedNodes = process.env.SEED_NODES ? process.env.SEED_NODES.split(',') : [];
         this.connectToSeedNode();
     }
@@ -53,6 +54,7 @@ export class P2PService {
     private handleNewTransaction(tx: any) {
         this.logger.log(`Received new transaction: ${tx.id}`);
         // Lógica para procesar la transacción
+        this.p2p.server.emit('local_new_transaction', tx);
     }
 
     private handleDisconnect() {
@@ -63,5 +65,14 @@ export class P2PService {
 
     isConnected(): boolean {
         return this.connected;
+    }
+
+    emit(event: string, data: any): void {
+        if (this.connected && this.socket) {
+            this.socket.emit(event, data);
+            this.logger.debug(`Emitted ${event} event to network`);
+        } else {
+            this.logger.warn(`Failed to emit ${event}: not connected to network`);
+        }
     }
 }

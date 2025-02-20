@@ -32,7 +32,7 @@ export class BlockchainService {
     async getLatestBlocks(limit = 10): Promise<any[]> {
         const allBlocks = await this.redis.hGetAll(this.BLOCKCHAIN_KEY);
         return Object.values(allBlocks)
-            .map(JSON.parse)
+            .map((block) => JSON.parse(block))
             .sort((a, b) => b.height - a.height)
             .slice(0, limit);
     }
