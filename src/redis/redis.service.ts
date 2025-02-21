@@ -55,14 +55,16 @@ export class RedisService {
         }
     }
     
-    async hSet(key: string, field: string, value: string): Promise<void> {
+    async hSet(key: string, data: Record<string, any>): Promise<void> {
         try {
-            await this.client.hSet(key, field, value);
+            const flattenedData = Object.entries(data).flat();
+            await this.client.hSet(key, flattenedData);
         } catch (error) {
             this.logger.error(`Redis hSet error: ${error.message}`);
             throw error;
         }
     }
+    
     
     async hGet(key: string, field: string): Promise<string | null | undefined> {
         try {
