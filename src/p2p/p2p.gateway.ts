@@ -40,12 +40,6 @@ export class P2pGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     this.logger.log(`Client disconnected: ${id}`);
   }
 
-  @SubscribeMessage('message')
-  handleMessage(client: Socket, payload: any): string {
-    this.logger.debug(`Received message from ${client.id}: ${JSON.stringify(payload)}`);
-    return 'Message received';
-  }
-
   @SubscribeMessage('subscribe_blocks')
   handleSubscribeBlocks(client: Socket): void {
     client.join('block_subscribers');

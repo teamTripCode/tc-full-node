@@ -14,7 +14,9 @@ export class StateService {
      * Constructor injects the RedisService dependency.
      * @param redis - Instance of RedisService for state storage.
      */
-    constructor(private readonly redis: RedisService) { }
+    constructor(
+        private readonly redis: RedisService
+    ) { }
 
     /**
      * Updates the blockchain state based on the given block's transactions.

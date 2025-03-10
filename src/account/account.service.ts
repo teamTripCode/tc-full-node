@@ -36,12 +36,14 @@ export class AccountService {
 
   async verifyAccount(address: string): Promise<void> {
     const account = await this.getAccount(address);
-    if (account.type === AccountType.KYB) {
-      await this.redis.hSet(`${this.ACCOUNT_PREFIX}${address}`, {
-        verified: true,
-        verificationDate: new Date().toISOString()
-      });
+    if (account.type === AccountType.KYB && !account.verified) {
+      throw new Error('Business account is not verified');
     }
+
+    await this.redis.hSet(`${this.ACCOUNT_PREFIX}${address}`, {
+      verified: true,
+      verificationDate: new Date().toISOString(),
+    });
   }
 
   async getAccount(address: string): Promise<any> {
