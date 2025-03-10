@@ -5,16 +5,16 @@ import * as Redis from 'redis';
 export class RedisService {
     private readonly logger = new Logger(RedisService.name);
     private client: Redis.RedisClientType;
-    
+
     constructor() {
         const redisUrl = process.env.REDIS_URL;;
         this.client = Redis.createClient({ url: redisUrl });
-        
+
         this.client.on('error', (err) => {
             this.logger.error(`Redis client error: ${err.message}`);
         });
     }
-    
+
     async onModuleInit() {
         try {
             await this.client.connect();
@@ -23,7 +23,7 @@ export class RedisService {
             this.logger.error(`Failed to connect to Redis: ${error.message}`);
         }
     }
-    
+
     async set(key: string, value: string, ttl?: number): Promise<void> {
         try {
             if (ttl) {
@@ -36,7 +36,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async get(key: string): Promise<string | null> {
         try {
             return await this.client.get(key);
@@ -45,7 +45,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async del(key: string): Promise<void> {
         try {
             await this.client.del(key);
@@ -54,18 +54,26 @@ export class RedisService {
             throw error;
         }
     }
-    
-    async hSet(key: string, data: Record<string, any>): Promise<void> {
+
+    // This is the fixed hSet method that handles both use cases
+    async hSet(key: string, fieldOrData: string | Record<string, any>, value?: string): Promise<void> {
         try {
-            const flattenedData = Object.entries(data).flat();
-            await this.client.hSet(key, flattenedData);
+            if (typeof fieldOrData === 'string' && value !== undefined) {
+                // Case: hSet(key, field, value)
+                await this.client.hSet(key, fieldOrData, value);
+            } else if (typeof fieldOrData === 'object') {
+                // Case: hSet(key, {field1: value1, field2: value2, ...})
+                const flattenedData = Object.entries(fieldOrData).flat();
+                await this.client.hSet(key, flattenedData);
+            } else {
+                throw new Error('Invalid arguments for hSet method');
+            }
         } catch (error) {
             this.logger.error(`Redis hSet error: ${error.message}`);
             throw error;
         }
     }
-    
-    
+
     async hGet(key: string, field: string): Promise<string | null | undefined> {
         try {
             return await this.client.hGet(key, field);
@@ -74,7 +82,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async hGetAll(key: string): Promise<Record<string, string>> {
         try {
             return await this.client.hGetAll(key);
@@ -83,7 +91,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async hExists(key: string, field: string): Promise<boolean> {
         try {
             // The hExists method returns a boolean in the newer Redis client
@@ -93,7 +101,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async hDel(key: string, field: string): Promise<void> {
         try {
             await this.client.hDel(key, field);
@@ -102,7 +110,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async incr(key: string): Promise<number> {
         try {
             return await this.client.incr(key);
@@ -111,7 +119,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async expire(key: string, seconds: number): Promise<void> {
         try {
             await this.client.expire(key, seconds);
@@ -120,7 +128,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async ping(): Promise<string> {
         try {
             return await this.client.ping();
@@ -129,7 +137,7 @@ export class RedisService {
             throw error;
         }
     }
-    
+
     async flushDb(): Promise<void> {
         try {
             if (process.env.NODE_ENV === 'test') {

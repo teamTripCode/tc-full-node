@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UpdateAccountDto } from './dto/update-account.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { AccountType, KYBData, KYCData } from './dto/create-account.dto';
 

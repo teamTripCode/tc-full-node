@@ -6,9 +6,9 @@ import { ValidatorService } from 'src/validator/validator.service';
 @Injectable()
 export class TripcoinService {
     private readonly logger = new Logger(TripcoinService.name);
-    private readonly GAS_PRICE = parseInt(process.env.GAS_PRICE) || 10;
-    private readonly BLOCK_REWARD = parseInt(process.env.BLOCK_REWARD) || 50;
-    private readonly SUPPLY_CAP = parseInt(process.env.SUPPLY_CAP) || 21_000_000;
+    private readonly GAS_PRICE = parseInt(process.env.GAS_PRICE!) || 10;
+    private readonly BLOCK_REWARD = parseInt(process.env.BLOCK_REWARD!) || 50;
+    private readonly SUPPLY_CAP = parseInt(process.env.SUPPLY_CAP!) || 21_000_000;
     private readonly INITIAL_SUPPLY = 1_000_000;
 
     constructor(
@@ -81,7 +81,7 @@ export class TripcoinService {
 
     private async getTotalSupply(): Promise<number> {
         const supply = await this.redis.get('tripcoin:supply');
-        return parseInt(supply) || 0;
+        return parseInt(supply!) || 0;
     }
 
     private async mint(amount: number): Promise<void> {
