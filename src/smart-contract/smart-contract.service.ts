@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { TripcoinService } from '../tripcoin/tripcoin.service';
-import { DynamicPricingService } from 'src/pricing/pricing.service';
 
 @Injectable()
 export class SmartContractService {
@@ -11,7 +10,6 @@ export class SmartContractService {
   constructor(
     private readonly redis: RedisService,
     private readonly tripcoin: TripcoinService,
-    private readonly pricing: DynamicPricingService
   ) { }
 
   async deployLoyaltyContract(businessAddress: string, initialSupply: number): Promise<void> {

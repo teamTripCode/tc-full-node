@@ -6,5 +6,6 @@ import { RedisModule } from 'src/redis/redis.module';
 @Module({
   imports: [CryptoModule, RedisModule],
   providers: [ValidatorService],
+  exports: [ValidatorService] 
 })
 export class ValidatorModule {}
