@@ -11,10 +11,32 @@ import { BlockService } from './block/block.service';
 import { AccountModule } from './account/account.module';
 import { SmartContractService } from './smart-contract/smart-contract.service';
 import { TransactionService } from './transaction/transaction.service';
+import { ValidatorModule } from './validator/validator.module';
+import { TripcoinService } from './tripcoin/tripcoin.service';
+import { TripcoinModule } from './tripcoin/tripcoin.module';
+import { StateModule } from './state/state.module';
+import { StateService } from './state/state.service';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), P2pModule, AccountModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    P2pModule,
+    AccountModule,
+    ValidatorModule,
+    TripcoinModule,
+    StateModule
+  ],
   controllers: [AppController],
-  providers: [AppService, RedisService, P2pGateway, HealthService, BlockchainService, BlockService, SmartContractService, TransactionService],
+  providers: [
+    AppService,
+    RedisService,
+    P2pGateway,
+    HealthService,
+    BlockchainService,
+    BlockService,
+    SmartContractService,
+    TransactionService,
+    TripcoinService,
+  ],
 })
 export class AppModule {}
